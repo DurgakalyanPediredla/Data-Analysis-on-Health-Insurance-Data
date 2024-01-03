@@ -1,13 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 18 22:02:07 2023
+Created on Fri Dec 29 18:00:17 2023
 
 @author: kalyanpediredla
 """
@@ -20,28 +14,37 @@ df= pd.read_csv("/Users/kalyanpediredla/Downloads/insurance_dataset.csv")
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns',None)
 
-#checking null values in dataframe.
+#Verifying the presence of null values in the data frame to assess its readiness for analysis.
 df.notnull().all()
 df.shape #checking shape of the dataframe
 print(f'The insurence data contains {df.shape[0]} rows and {df.shape[1]} columns.')
 print(df.isna().sum())
-## replacing null values with the mode of its column.
+
+## Replacing missing values with most frequent value in its column.
 df['medical_history'].fillna(df['medical_history'].mode()[0],inplace= True)
 df['family_medical_history'].fillna(df['family_medical_history'].mode()[0],inplace= True)
-print(df.head(8)) ## printing top 8 rows in the data frame.
+
+#Displaying the initial 8 rows of the data frame for insight into the data's charactersitics.
+print(df.head(8)) 
 print(df.isna().sum())
-desc_stat_of_numercialdata= df.describe() ## descrptive stats of numerical data columns in the dataframe
-desc_stat_of_categoricaldata= df.describe(include=["object", "bool"]) #descriptive stats of categorical data columns.
+
+##Generating statistical summaries for the numerical data columns within the data frame.
+desc_stat_of_numercialdata= df.describe() 
+
+##Generating statistical summaries for the categorical data columns within the data frame.
+desc_stat_of_categoricaldata= df.describe(include=["object", "bool"]) 
 
 print(desc_stat_of_numercialdata)
 print(desc_stat_of_categoricaldata)
 
-print(df['region'].unique())  ##verifying unique categorical data in the 'region' column of df.
+#Confirming distinct values in the 'region' column of the data frame.
+print(df['region'].unique())  
 
-##importing matplotlib and seaborn libraries for data visualization.
+##importing matplotlib and seaborn libraries to facilitate data visualization.
 import matplotlib.pyplot as plt
 import seaborn as sns
-## plotting pie chart that represents the distribution of policy holders across regions.
+
+## Creating a pie chart depicting the distribution of policy holders among different regions.
 category_counts=df['region'].value_counts()
 explode=(0,0,0,0)
 colors=['gold','lightcoral','lightskyblue','lightgreen']
@@ -73,8 +76,9 @@ def correlation_heatmap():
 correlation_heatmap()
 
 
-## asking the user to give a threshold limit to proceed with the data visualization.
+
 print() ## creating space from the previous output in the console.
+# Code with the user interaction to input a threshold limit and dynaically produce results based on the provided value.
 threshold_charges=int(input('Give the threshold limit : '))
 df= pd.read_csv("/Users/kalyanpediredla/Downloads/insurance_dataset.csv")
 
@@ -189,9 +193,6 @@ def distribution_of_charges_by_coverage_level(df, coverage_level,charges):
     plt.show()
 
 distribution_of_charges_by_coverage_level(df, 'coverage_level', 'charges')
-
-
-# In[ ]:
 
 
 
