@@ -11,3 +11,4 @@ Libraries used:
 - Matplotlib
 - seaborn
 - Sklearn
+-LabelEncoder
