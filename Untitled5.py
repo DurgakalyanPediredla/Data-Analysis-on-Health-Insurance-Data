@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 29 18:00:17 2023
+Created on Mon Jan  8 12:14:07 2024
 
 @author: kalyanpediredla
 """
@@ -21,8 +21,8 @@ print(f'The insurence data contains {df.shape[0]} rows and {df.shape[1]} columns
 print(df.isna().sum())
 
 ## Replacing missing values with most frequent value in its column.
-df['medical_history'].fillna(df['medical_history'].mode()[0],inplace= True)
-df['family_medical_history'].fillna(df['family_medical_history'].mode()[0],inplace= True)
+df['medical_history']=df['medical_history'].fillna('No Medical History')
+df['family_medical_history']=df['family_medical_history'].fillna('No Family Medical History')
 
 #Displaying the initial 8 rows of the data frame for insight into the data's charactersitics.
 print(df.head(8)) 
@@ -58,30 +58,45 @@ plt.legend(category_counts.index,title='Categories',loc='upper right')
 plt.title('Distribution of policy holders across regions')
 plt.show()
 
-## importing label encoder library to assign numerical values to unique categorical data.
-## plotting correlation heatmap to visually show the correlation between all the columns data.
-from sklearn.preprocessing import LabelEncoder
-def correlation_heatmap():
-    x=df.select_dtypes(include=['object']).columns
-    y=LabelEncoder()
-    for column in x:
-        df[column]=y.fit_transform(df[column])
-    correlation_matrix=df.corr()
-    plt.figure(figsize=(10,8))
-    sns.set(font_scale=1.2)
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f",linewidths=0.5,vmin=-1,vmax=1,square= True, cbar_kws={"shrink":0.75},
-                xticklabels=correlation_matrix.columns, yticklabels=correlation_matrix.columns,)
-    plt.title("Correlation Heatmap")
-    plt.show()
-correlation_heatmap()
-
-
 
 print() ## creating space from the previous output in the console.
+
+
+groupby_medical_history=  df.groupby('medical_history')['charges'].mean()
+
+ax=groupby_medical_history.plot(kind='bar', color='skyblue',edgecolor='black')
+plt.title('Average Charges by Medical History')
+plt.xlabel('Medical History')
+plt.ylabel('Average Charges')
+for index, value in enumerate(groupby_medical_history):
+    ax.text(index,value + 0.1, f'{value:.2f}', ha='center', va='bottom')
+plt.show()
+
+groupby_family_medical_history=  df.groupby('family_medical_history')['charges'].mean()
+
+ax=groupby_family_medical_history.plot(kind='bar', color='skyblue',edgecolor='black')
+plt.title('Average Charges by Family Medical History')
+plt.xlabel('Family Medical History')
+plt.ylabel('Average Charges')
+for index, value in enumerate(groupby_family_medical_history):
+    ax.text(index,value + 0.1, f'{value:.2f}', ha='center', va='bottom')
+plt.show()
+
+grouped_data= df.groupby(['medical_history','family_medical_history'])['charges'].mean().reset_index()
+plt.figure(figsize=(14,10))
+ax=sns.barplot(x='medical_history', y='charges',hue='family_medical_history', data=grouped_data,palette='viridis')
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.2f}', (p.get_x()+p.get_width()/2., p.get_height()), ha='center', va='bottom', fontsize=9)
+
+plt.title('Average charges by medical_history and family_medical_history')
+plt.xlabel('medical_history')
+plt.ylabel('Average Charges')
+plt.show()
+
+
+
 # Code with the user interaction to input a threshold limit and dynaically produce results based on the provided value.
 threshold_charges=int(input('Give the threshold limit : '))
-df= pd.read_csv("/Users/kalyanpediredla/Downloads/insurance_dataset.csv")
-
 ##plotting violin plot that represents the probability of charges exceeding the threshold level.(eg.$15000)
 def prob_charges_exceeding_thershold_by_region(threshold_charges):
     selected_regions=['northwest', 'southeast', 'southwest']
@@ -100,6 +115,8 @@ def prob_charges_exceeding_thershold_by_region(threshold_charges):
     plt.title(f'Probability of Charges Exceeding a Threshold of {threshold_charges} by Region is {probability_exceeding_threshold: .2%}',fontsize=16)
     ax.legend()
     plt.show()
+    
+    
 prob_charges_exceeding_thershold_by_region(threshold_charges)
 
 ##plotting the barplot that represents the average BMI by region.
@@ -181,6 +198,49 @@ def compare_charges_by_gender(df, charges, gender):
 compare_charges_by_gender(df, 'charges', 'gender')
 
 
+
+
+
+from sklearn.preprocessing import LabelEncoder
+from scipy.stats import chi2_contingency
+## plotting correlation heatmap to visually show the correlation between all the categorical columns data
+def chi_square_heatmap(df):
+    
+    categorical_cols= df.select_dtypes(include=['object']).columns
+    label_encoder= LabelEncoder()
+    df[categorical_cols]= df[categorical_cols].apply(label_encoder.fit_transform)
+    chi2_matrix= pd.DataFrame(index=categorical_cols,columns=categorical_cols,dtype=float)
+    
+    for row in categorical_cols:
+        for col in categorical_cols:
+            if row== col:
+                chi2_matrix.loc[row,col]=1.0
+            else:
+                contingency_table=pd.crosstab(df[row],df[col])
+                _, p_value,_, _ = chi2_contingency(contingency_table)
+                chi2_matrix.loc[row,col]=p_value
+    plt.figure(figsize=(15,13))
+    sns.set(font_scale=1.5)
+    sns.heatmap(chi2_matrix, annot=True, cmap='coolwarm', fmt=".4f", linewidths=0.5,  vmin=0, vmax=1,square=True,
+                cbar_kws={"shrink":0.75}, xticklabels=chi2_matrix.columns)
+    plt.title("Chi-Square Test P-Values Heatmap")
+    plt.show()
+    
+print(chi_square_heatmap(df))
+
+## plotting correlation heatmap to visually show the correlation between all the numerical columns data.
+def numerical_data_heatmap(df, numerical_columns):
+    new_df=df[numerical_columns]
+    correlation_matrix= new_df.corr()
+    
+    plt.figure(figsize=(12,10))
+    sns.heatmap(correlation_matrix, annot=True, cmap='viridis', fmt='.4f', linewidths=.5)
+    plt.title('Correlation Heatmap of Columns with Numerical Data')
+    plt.show()
+
+print(numerical_data_heatmap(df,['age','bmi','children','charges']))
+
+
 ### plotting boxplot that represents the distribution of charges by coverage level.
 def distribution_of_charges_by_coverage_level(df, coverage_level,charges):
     plt.figure(figsize=(10,6))
@@ -193,6 +253,21 @@ def distribution_of_charges_by_coverage_level(df, coverage_level,charges):
     plt.show()
 
 distribution_of_charges_by_coverage_level(df, 'coverage_level', 'charges')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
