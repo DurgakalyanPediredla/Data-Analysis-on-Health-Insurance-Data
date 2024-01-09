@@ -12,4 +12,6 @@ Libraries used:
 - seaborn
 - Sklearn
 - LabelEncoder
+
+Findings and Recommendations can be found in the attached Health Insurance Data Analysis.pdf file.
   
